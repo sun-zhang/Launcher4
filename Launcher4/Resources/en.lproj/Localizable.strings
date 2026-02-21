@@ -1,0 +1,35 @@
+/*
+  Localizable.strings (English)
+  Launcher4
+*/
+
+// App
+"app.name" = "Launcher";
+"app.settings" = "Settings";
+
+// Search
+"search.placeholder" = "Search applications...";
+"search.noResults" = "No applications found";
+
+// Folder
+"folder.defaultName" = "Other";
+"folder.rename" = "Rename Folder";
+"folder.delete" = "Delete Folder";
+
+// Actions
+"action.open" = "Open";
+"action.showInFinder" = "Show in Finder";
+"action.getInfo" = "Get Info";
+"action.delete" = "Delete";
+"action.cancel" = "Cancel";
+
+// Settings
+"settings.iconSize" = "Icon Size";
+"settings.gridColumns" = "Columns";
+"settings.gridRows" = "Rows";
+"settings.appearance" = "Appearance";
+"settings.performanceMode" = "Performance Mode";
+
+// Empty State
+"empty.noApps" = "No applications found";
+"empty.refresh" = "Refresh";

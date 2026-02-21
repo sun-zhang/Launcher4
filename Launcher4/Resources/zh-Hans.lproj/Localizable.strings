@@ -1,0 +1,35 @@
+/*
+  Localizable.strings (简体中文)
+  Launcher4
+*/
+
+// App
+"app.name" = "启动器";
+"app.settings" = "设置";
+
+// Search
+"search.placeholder" = "搜索应用程序...";
+"search.noResults" = "未找到应用程序";
+
+// Folder
+"folder.defaultName" = "其他";
+"folder.rename" = "重命名文件夹";
+"folder.delete" = "删除文件夹";
+
+// Actions
+"action.open" = "打开";
+"action.showInFinder" = "在 Finder 中显示";
+"action.getInfo" = "获取信息";
+"action.delete" = "删除";
+"action.cancel" = "取消";
+
+// Settings
+"settings.iconSize" = "图标大小";
+"settings.gridColumns" = "列数";
+"settings.gridRows" = "行数";
+"settings.appearance" = "外观";
+"settings.performanceMode" = "性能模式";
+
+// Empty State
+"empty.noApps" = "未找到应用程序";
+"empty.refresh" = "刷新";

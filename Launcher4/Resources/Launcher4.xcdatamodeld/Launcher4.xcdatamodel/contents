@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22752" systemVersion="23E224" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="ApplicationEntity" representedClassName="ApplicationEntity" syncable="YES">
+        <attribute name="id" optional="NO" attributeType="String"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <attribute name="bundleIdentifier" optional="NO" attributeType="String"/>
+        <attribute name="bundleURL" optional="NO" attributeType="URI"/>
+        <attribute name="position" optional="NO" attributeType="Integer 16" defaultValueString="0"/>
+        <attribute name="page" optional="NO" attributeType="Integer 16" defaultValueString="0"/>
+    </entity>
+    <entity name="FolderEntity" representedClassName="FolderEntity" syncable="YES">
+        <attribute name="id" optional="NO" attributeType="String"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <attribute name="applicationsData" optional="YES" attributeType="Binary"/>
+        <attribute name="creationDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="SettingsEntity" representedClassName="SettingsEntity" syncable="YES">
+        <attribute name="key" optional="NO" attributeType="String"/>
+        <attribute name="value" optional="YES" attributeType="Binary"/>
+    </entity>
+</model>
