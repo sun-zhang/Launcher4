@@ -34,13 +34,30 @@ struct LaunchpadView: View {
     }
     
     var body: some View {
-        ZStack {
-            backgroundBlur
-            mainContent
-        }
-        .onAppear {
-            Task {
-                await viewModel.loadApplications()
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let height = geometry.size.height
+            let minIconSize: CGFloat = 48
+            let maxIconSize: CGFloat = 128
+            let minSpacing: CGFloat = 16
+            let maxSpacing: CGFloat = 64
+            let columns = 7 // 固定列数，可根据需要调整
+            // 计算最大可用宽度
+            let totalMinWidth = CGFloat(columns) * minIconSize + CGFloat(columns + 1) * minSpacing
+            let totalMaxWidth = CGFloat(columns) * maxIconSize + CGFloat(columns + 1) * maxSpacing
+            // 计算当前可用宽度下的 iconSize 和 spacing
+            let availableWidth = width
+            let t = (availableWidth - totalMinWidth) / (totalMaxWidth - totalMinWidth)
+            let iconSize = availableWidth <= totalMinWidth ? minIconSize : (availableWidth >= totalMaxWidth ? maxIconSize : minIconSize + t * (maxIconSize - minIconSize))
+            let spacing = availableWidth <= totalMinWidth ? minSpacing : (availableWidth >= totalMaxWidth ? maxSpacing : minSpacing + t * (maxSpacing - minSpacing))
+            ZStack {
+                backgroundBlur
+                mainContent(columns: columns, iconSize: iconSize, spacing: spacing)
+            }
+            .onAppear {
+                Task {
+                    await viewModel.loadApplications()
+                }
             }
         }
     }
@@ -51,11 +68,11 @@ struct LaunchpadView: View {
             .background(.ultraThinMaterial)
     }
     
-    private var mainContent: some View {
+    private func mainContent(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
         VStack(spacing: 0) {
             searchSection
             Spacer()
-            gridSection
+            gridSection(columns: columns, iconSize: iconSize, spacing: spacing)
             Spacer()
             pageIndicatorSection
         }
@@ -83,21 +100,21 @@ struct LaunchpadView: View {
     }
     
     @ViewBuilder
-    private var gridSection: some View {
+    private func gridSection(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
         if isSearching {
-            searchResultsGrid
+            searchResultsGrid(columns: columns, iconSize: iconSize, spacing: spacing)
         } else {
-            applicationGrid
+            applicationGrid(columns: columns, iconSize: iconSize, spacing: spacing)
         }
     }
     
-    private var searchResultsGrid: some View {
+    private func searchResultsGrid(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
         ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(80), spacing: 16), count: 7), spacing: 16) {
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(iconSize), spacing: spacing), count: columns), spacing: spacing) {
                 ForEach(searchViewModel.searchResults) { app in
                     ApplicationIconView(
                         application: app,
-                        iconSize: 64,
+                        iconSize: iconSize,
                         isRunning: false,
                         isEditing: false
                     )
@@ -111,48 +128,43 @@ struct LaunchpadView: View {
     }
     
     @ViewBuilder
-    private var applicationGrid: some View {
+    private func applicationGrid(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
         switch performanceMode {
         case .swiftUI:
-            swiftUIGrid
+            ScrollView {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(iconSize), spacing: spacing), count: columns), spacing: spacing) {
+                    ForEach(viewModel.folders) { folder in
+                        FolderView(
+                            folder: folder,
+                            iconSize: iconSize,
+                            isOpen: false,
+                            onToggle: {},
+                            onApplicationSelected: { appId in }
+                        )
+                    }
+                    ForEach(viewModel.applications) { app in
+                        ApplicationIconView(
+                            application: app,
+                            iconSize: iconSize,
+                            isRunning: false,
+                            isEditing: viewModel.isEditing
+                        )
+                        .editMode(isEditing: viewModel.isEditing) {
+                            Task {
+                                try? await viewModel.deleteApplication(app)
+                            }
+                        }
+                        .onTapGesture {
+                            if !viewModel.isEditing {
+                                launchApplication(app)
+                            }
+                        }
+                    }
+                }
+                .padding()
+            }
         case .coreAnimation:
             caGridRepresentable
-        }
-    }
-    
-    private var swiftUIGrid: some View {
-        ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(80), spacing: 16), count: gridSize.columns), spacing: 16) {
-                ForEach(viewModel.folders) { folder in
-                    FolderView(
-                        folder: folder,
-                        iconSize: 64,
-                        isOpen: false,
-                        onToggle: {},
-                        onApplicationSelected: { appId in
-                        }
-                    )
-                }
-                ForEach(viewModel.applications) { app in
-                    ApplicationIconView(
-                        application: app,
-                        iconSize: 64,
-                        isRunning: false,
-                        isEditing: viewModel.isEditing
-                    )
-                    .editMode(isEditing: viewModel.isEditing) {
-                        Task {
-                            try? await viewModel.deleteApplication(app)
-                        }
-                    }
-                    .onTapGesture {
-                        if !viewModel.isEditing {
-                            launchApplication(app)
-                        }
-                    }
-                }
-            }
-            .padding()
         }
     }
     
