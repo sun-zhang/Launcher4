@@ -54,15 +54,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func configureMainWindow() {
         guard let window = NSApplication.shared.windows.first else { return }
-        window.styleMask.insert(.borderless)
         window.styleMask.insert(.fullSizeContentView)
         window.isOpaque = false
         window.backgroundColor = .clear
-        window.level = .floating
         window.center()
-        // 自动全屏
-        DispatchQueue.main.async {
-            window.toggleFullScreen(nil)
+        window.makeKeyAndOrderFront(nil)
+        // 延迟全屏，确保窗口已显示并为主窗口
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            if window.isKeyWindow {
+                window.perform(#selector(NSWindow.toggleFullScreen(_:)), with: nil, afterDelay: 0)
+            }
         }
     }
 }
