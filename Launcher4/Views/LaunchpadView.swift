@@ -42,10 +42,8 @@ struct LaunchpadView: View {
             let minSpacing: CGFloat = 16
             let maxSpacing: CGFloat = 64
             let columns = 7 // 固定列数，可根据需要调整
-            // 计算最大可用宽度
             let totalMinWidth = CGFloat(columns) * minIconSize + CGFloat(columns + 1) * minSpacing
             let totalMaxWidth = CGFloat(columns) * maxIconSize + CGFloat(columns + 1) * maxSpacing
-            // 计算当前可用宽度下的 iconSize 和 spacing
             let availableWidth = width
             let t = (availableWidth - totalMinWidth) / (totalMaxWidth - totalMinWidth)
             let iconSize = availableWidth <= totalMinWidth ? minIconSize : (availableWidth >= totalMaxWidth ? maxIconSize : minIconSize + t * (maxIconSize - minIconSize))
@@ -53,6 +51,10 @@ struct LaunchpadView: View {
             ZStack {
                 backgroundBlur
                 mainContent(columns: columns, iconSize: iconSize, spacing: spacing)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                NSApplication.shared.hide(nil)
             }
             .onAppear {
                 Task {
@@ -197,6 +199,9 @@ struct LaunchpadView: View {
     private func launchApplication(_ app: ApplicationInfo) {
         Task {
             await viewModel.launchApplication(app)
+            DispatchQueue.main.async {
+                NSApplication.shared.hide(nil)
+            }
         }
     }
 }
