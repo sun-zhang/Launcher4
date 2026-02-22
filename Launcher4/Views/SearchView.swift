@@ -12,7 +12,7 @@ struct SearchView: View {
         VStack(spacing: 16) {
             searchField
             if searchText.isEmpty {
-                emptyStateView
+                EmptyView()
             } else if searchResults.isEmpty {
                 noResultsView
             } else {
@@ -45,15 +45,17 @@ struct SearchView: View {
                 }
                 .buttonStyle(.plain)
             }
+            // 搜索提示信息
+            if searchText.isEmpty {
+                Text("输入关键词搜索应用")
+                    .foregroundColor(.gray)
+                    .font(.caption)
+                    .padding(.leading, 8)
+            }
         }
         .padding(8)
         .background(Color.white.opacity(0.1))
         .cornerRadius(8)
-    }
-    
-    private var emptyStateView: some View {
-        Text("输入关键词搜索应用")
-            .foregroundColor(.gray)
     }
     
     private var noResultsView: some View {
