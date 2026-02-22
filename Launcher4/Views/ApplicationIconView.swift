@@ -40,7 +40,7 @@ struct ApplicationIconView: View {
     
     private var nameLabel: some View {
         Text(application.displayName)
-            .font(.caption)
+            .font(.system(size: min(14, max(12, iconSize * 0.18)), weight: .medium))
             .foregroundColor(.white)
             .lineLimit(1)
             .truncationMode(.tail)

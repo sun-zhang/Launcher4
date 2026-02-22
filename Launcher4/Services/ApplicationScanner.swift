@@ -103,7 +103,7 @@ actor ApplicationScanner: ApplicationScannerProtocol {
         }
         
         // 检查是否为系统应用
-        let isSystemApp = url.path.hasPrefix("/System/") || 
+        let isSystemApp = url.path.hasPrefix("/System/") ||
                           url.path.hasPrefix("/System/Applications/")
         
         // 获取本地化名称
@@ -126,34 +126,35 @@ actor ApplicationScanner: ApplicationScannerProtocol {
     /// 创建本地化名称
     private func createLocalizedName(from bundle: Bundle, defaultName: String) -> ApplicationInfo.LocalizedString {
         let localizations = bundle.localizations
-        
         var english = defaultName
         var chineseSimplified: String?
         var chineseTraditional: String?
         var japanese: String?
         var korean: String?
-        
-        // 尝试获取本地化名称
-        let enName = bundle.localizedString(forKey: "CFBundleDisplayName", value: nil, table: nil)
-        if enName != defaultName && !enName.isEmpty {
-            english = enName
+
+        func localizedValue(for key: String, localization: String) -> String? {
+            let value = bundle.localizedString(forKey: key, value: nil, table: nil)
+            return (value != key && !value.isEmpty) ? value : nil
         }
-        
+
+        // 英文名优先 CFBundleDisplayName, fallback CFBundleName
+        english = localizedValue(for: "CFBundleDisplayName", localization: "en") ?? localizedValue(for: "CFBundleName", localization: "en") ?? defaultName
+
         for localization in localizations {
             switch localization {
             case "zh-Hans", "zh_CN":
-                chineseSimplified = bundle.localizedString(forKey: "CFBundleDisplayName", value: nil, table: nil)
+                chineseSimplified = localizedValue(for: "CFBundleDisplayName", localization: localization) ?? localizedValue(for: "CFBundleName", localization: localization)
             case "zh-Hant", "zh_TW":
-                chineseTraditional = bundle.localizedString(forKey: "CFBundleDisplayName", value: nil, table: nil)
+                chineseTraditional = localizedValue(for: "CFBundleDisplayName", localization: localization) ?? localizedValue(for: "CFBundleName", localization: localization)
             case "ja":
-                japanese = bundle.localizedString(forKey: "CFBundleDisplayName", value: nil, table: nil)
+                japanese = localizedValue(for: "CFBundleDisplayName", localization: localization) ?? localizedValue(for: "CFBundleName", localization: localization)
             case "ko":
-                korean = bundle.localizedString(forKey: "CFBundleDisplayName", value: nil, table: nil)
+                korean = localizedValue(for: "CFBundleDisplayName", localization: localization) ?? localizedValue(for: "CFBundleName", localization: localization)
             default:
                 break
             }
         }
-        
+
         return ApplicationInfo.LocalizedString(
             english: english,
             chineseSimplified: chineseSimplified,
@@ -202,7 +203,7 @@ actor ApplicationScanner: ApplicationScannerProtocol {
     /// 处理文件系统变更
     private func handleFileSystemChange() async {
         let oldApps = applications
-        let newApps = await scanApplications() 
+        let newApps = await scanApplications()
         
         var changes: Set<ApplicationChange> = []
         
