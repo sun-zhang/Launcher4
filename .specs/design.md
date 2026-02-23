@@ -731,6 +731,8 @@ struct AppSettings: Codable, Equatable, Sendable {
     var iconSize: IconSize = .medium
     var gridColumns: Int = 7
     var gridRows: Int = 5
+    var horizontalSpacing: Double = 0  // 横向间距，0 表示使用动态计算值
+    var verticalSpacing: Double = 0    // 纵向间距，0 表示使用动态计算值
     var shortcutKey: ShortcutKey = .f4
     var enableGestures: Bool = true
     var appearanceMode: AppearanceMode = .auto
@@ -742,6 +744,34 @@ struct AppSettings: Codable, Equatable, Sendable {
     var searchHistoryEnabled: Bool = true
     var dockIntegrationEnabled: Bool = true
     var missionControlIntegrationEnabled: Bool = true
+    
+    /// 根据屏幕长宽比和网格长宽比动态计算横向间距
+    /// - Parameters:
+    ///   - screenAspectRatio: 屏幕宽高比（宽/高）
+    ///   - gridAspectRatio: 网格宽高比（列数/行数）
+    /// - Returns: 计算后的横向间距
+    func calculateHorizontalSpacing(screenAspectRatio: Double, gridAspectRatio: Double) -> Double {
+        // 如果用户设置了自定义值，使用用户值
+        if horizontalSpacing > 0 { return horizontalSpacing }
+        // 否则根据比例差动态计算
+        let ratio = screenAspectRatio / gridAspectRatio
+        let baseSpacing: Double = 20.0
+        return baseSpacing * ratio
+    }
+    
+    /// 根据屏幕长宽比和网格长宽比动态计算纵向间距
+    /// - Parameters:
+    ///   - screenAspectRatio: 屏幕宽高比（宽/高）
+    ///   - gridAspectRatio: 网格宽高比（列数/行数）
+    /// - Returns: 计算后的纵向间距
+    func calculateVerticalSpacing(screenAspectRatio: Double, gridAspectRatio: Double) -> Double {
+        // 如果用户设置了自定义值，使用用户值
+        if verticalSpacing > 0 { return verticalSpacing }
+        // 否则根据比例差动态计算
+        let ratio = gridAspectRatio / screenAspectRatio
+        let baseSpacing: Double = 20.0
+        return baseSpacing * ratio
+    }
     
     enum IconSize: String, Codable, Sendable {
         case small, medium, large
