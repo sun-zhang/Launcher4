@@ -46,11 +46,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         container.register(EventBusProtocol.self, scope: .singleton) { _ in
             EventBus()
         }
+        // 注册 KeyboardShortcutManager 为单例
+        let shortcutManager = KeyboardShortcutManager()
+        KeyboardShortcutManager.setShared(shortcutManager)
+        container.register(KeyboardShortcutManager.self, instance: shortcutManager)
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         configureMainWindow()
         cleanMenuBar()
+        setupGlobalShortcut()
+        setupEscKeyToHideWindow()
     }
     
     private func configureMainWindow() {
@@ -76,5 +82,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appMenu.submenu = NSMenu(title: appName)
         mainMenu.addItem(appMenu)
         NSApplication.shared.mainMenu = mainMenu
+    }
+    // 注册全局快捷键 F4，按下时显示主窗口
+    private func setupGlobalShortcut() {
+        let shortcutManager = KeyboardShortcutManager()
+        KeyboardShortcutManager.setShared(shortcutManager)
+        Task {
+            await shortcutManager.setCallback { [weak self] in
+                DispatchQueue.main.async {
+                    self?.showMainWindow()
+                }
+            }
+        }
+    }
+    // 监听 ESC 键，按下时隐藏窗口
+    private func setupEscKeyToHideWindow() {
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 53 { // 53 = ESC
+                NSApplication.shared.hide(nil)
+                return nil // 阻止默认行为
+            }
+            return event
+        }
+    }
+    // 显示主窗口
+    private func showMainWindow() {
+        guard let window = NSApplication.shared.windows.first else { return }
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 }
