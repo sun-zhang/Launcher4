@@ -122,7 +122,7 @@ macOS Launcher 是一个 macOS 风格的应用程序启动器，提供类似 mac
 
 #### 验收标准
 
-1. 当用户按下指定的快捷键（F4 或 Fn+F4）时，Launcher 应打开或关闭
+1. 当用户按下配置的快捷键（默认为 F4 或 Fn+F4）时，Launcher 应打开或关闭，快捷键可在设置中自定义
 2. 当用户点击 Dock 中的 Launcher 图标时，Launcher 应打开
 3. 当 Launcher 打开时，Launcher 应以全屏模式显示窗口
 4. 当 Launcher 打开时，Launcher 应以淡入动画效果显示界面（从 Dock 图标扩展到全屏的缩放动画）
