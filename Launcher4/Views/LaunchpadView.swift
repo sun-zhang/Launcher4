@@ -208,11 +208,12 @@ struct LaunchpadView: View {
     }
     
     private func launchApplication(_ app: ApplicationInfo) {
-        Task {
+        // 立即异步隐藏窗口，保证主线程流畅
+        DispatchQueue.main.async {
+            NSApplication.shared.hide(nil)
+        }
+        Task.detached {
             await viewModel.launchApplication(app)
-            DispatchQueue.main.async {
-                NSApplication.shared.hide(nil)
-            }
         }
     }
 }
