@@ -101,12 +101,19 @@ struct LaunchpadView: View {
             },
             onClear: {
                 isSearching = false
+                Task {
+                    await viewModel.loadApplications()
+                }
             }
         )
         .frame(maxWidth: 400)
         .onChange(of: searchText) { _, newValue in
             Task {
-                searchViewModel.search(newValue)
+                if newValue.isEmpty {
+                    await viewModel.loadApplications()
+                } else {
+                    searchViewModel.search(newValue)
+                }
             }
             isSearching = !newValue.isEmpty
         }
@@ -131,9 +138,6 @@ struct LaunchpadView: View {
                         isRunning: false,
                         isEditing: false
                     )
-                    .onTapGesture {
-                        launchApplication(app)
-                    }
                 }
             }
             .padding()

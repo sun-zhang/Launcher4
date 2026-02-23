@@ -11,13 +11,6 @@ struct SearchView: View {
     var body: some View {
         VStack(spacing: 16) {
             searchField
-            if searchText.isEmpty {
-                EmptyView()
-            } else if searchResults.isEmpty {
-                noResultsView
-            } else {
-                resultsList
-            }
         }
         .padding()
         .onAppear { isSearchFocused = true }
@@ -61,18 +54,6 @@ struct SearchView: View {
     private var noResultsView: some View {
         Text("未找到匹配的应用")
             .foregroundColor(.gray)
-    }
-    
-    private var resultsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 4) {
-                ForEach(searchResults) { app in
-                    SearchResultRow(application: app) {
-                        onSelectApplication?(app)
-                    }
-                }
-            }
-        }
     }
 }
 
