@@ -38,19 +38,30 @@ struct LaunchpadView: View {
             let width = geometry.size.width
             let height = geometry.size.height
             let minIconSize: CGFloat = 48
-            let maxIconSize: CGFloat = 128
-            let minSpacing: CGFloat = 16
-            let maxSpacing: CGFloat = 64
-            let columns = 7 // 固定列数，可根据需要调整
-            let totalMinWidth = CGFloat(columns) * minIconSize + CGFloat(columns + 1) * minSpacing
-            let totalMaxWidth = CGFloat(columns) * maxIconSize + CGFloat(columns + 1) * maxSpacing
+            let maxIconSize: CGFloat = 110
+            let minSpacingX: CGFloat = 32
+            let maxSpacingX: CGFloat = 64
+            let minSpacingY: CGFloat = 24
+            let maxSpacingY: CGFloat = 48
+            let columns = 7 // 固定列数
+            let rows = 5 // 固定行数
+            let totalMinWidth = CGFloat(columns) * minIconSize + CGFloat(columns + 1) * minSpacingX
+            let totalMaxWidth = CGFloat(columns) * maxIconSize + CGFloat(columns + 1) * maxSpacingX
+            let totalMinHeight = CGFloat(rows) * minIconSize + CGFloat(rows + 1) * minSpacingY
+            let totalMaxHeight = CGFloat(rows) * maxIconSize + CGFloat(rows + 1) * maxSpacingY
             let availableWidth = width
-            let t = (availableWidth - totalMinWidth) / (totalMaxWidth - totalMinWidth)
-            let iconSize = availableWidth <= totalMinWidth ? minIconSize : (availableWidth >= totalMaxWidth ? maxIconSize : minIconSize + t * (maxIconSize - minIconSize))
-            let spacing = availableWidth <= totalMinWidth ? minSpacing : (availableWidth >= totalMaxWidth ? maxSpacing : minSpacing + t * (maxSpacing - minSpacing))
+            let availableHeight = height
+            let tX = (availableWidth - totalMinWidth) / (totalMaxWidth - totalMinWidth)
+            let tY = (availableHeight - totalMinHeight) / (totalMaxHeight - totalMinHeight)
+            let iconSize = min(
+                availableWidth <= totalMinWidth ? minIconSize : (availableWidth >= totalMaxWidth ? maxIconSize : minIconSize + tX * (maxIconSize - minIconSize)),
+                availableHeight <= totalMinHeight ? minIconSize : (availableHeight >= totalMaxHeight ? maxIconSize : minIconSize + tY * (maxIconSize - minIconSize))
+            )
+            let spacingX = availableWidth <= totalMinWidth ? minSpacingX : (availableWidth >= totalMaxWidth ? maxSpacingX : minSpacingX + tX * (maxSpacingX - minSpacingX))
+            let spacingY = availableHeight <= totalMinHeight ? minSpacingY : (availableHeight >= totalMaxHeight ? maxSpacingY : minSpacingY + tY * (maxSpacingY - minSpacingY))
             ZStack {
                 backgroundBlur
-                mainContent(columns: columns, iconSize: iconSize, spacing: spacing)
+                mainContent(columns: columns, rows: rows, iconSize: iconSize, spacingX: spacingX, spacingY: spacingY)
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -70,11 +81,11 @@ struct LaunchpadView: View {
             .background(.ultraThinMaterial)
     }
     
-    private func mainContent(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
+    private func mainContent(columns: Int, rows: Int, iconSize: CGFloat, spacingX: CGFloat, spacingY: CGFloat) -> some View {
         VStack(spacing: 0) {
             searchSection
             Spacer()
-            gridSection(columns: columns, iconSize: iconSize, spacing: spacing)
+            gridSection(columns: columns, rows: rows, iconSize: iconSize, spacingX: spacingX, spacingY: spacingY)
             Spacer()
             pageIndicatorSection
         }
@@ -102,17 +113,17 @@ struct LaunchpadView: View {
     }
     
     @ViewBuilder
-    private func gridSection(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
+    private func gridSection(columns: Int, rows: Int, iconSize: CGFloat, spacingX: CGFloat, spacingY: CGFloat) -> some View {
         if isSearching {
-            searchResultsGrid(columns: columns, iconSize: iconSize, spacing: spacing)
+            searchResultsGrid(columns: columns, rows: rows, iconSize: iconSize, spacingX: spacingX, spacingY: spacingY)
         } else {
-            applicationGrid(columns: columns, iconSize: iconSize, spacing: spacing)
+            applicationGrid(columns: columns, rows: rows, iconSize: iconSize, spacingX: spacingX, spacingY: spacingY)
         }
     }
     
-    private func searchResultsGrid(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
+    private func searchResultsGrid(columns: Int, rows: Int, iconSize: CGFloat, spacingX: CGFloat, spacingY: CGFloat) -> some View {
         ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(iconSize), spacing: spacing), count: columns), spacing: spacing) {
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(iconSize), spacing: spacingX), count: columns), spacing: spacingY) {
                 ForEach(searchViewModel.searchResults) { app in
                     ApplicationIconView(
                         application: app,
@@ -130,11 +141,11 @@ struct LaunchpadView: View {
     }
     
     @ViewBuilder
-    private func applicationGrid(columns: Int, iconSize: CGFloat, spacing: CGFloat) -> some View {
+    private func applicationGrid(columns: Int, rows: Int, iconSize: CGFloat, spacingX: CGFloat, spacingY: CGFloat) -> some View {
         switch performanceMode {
         case .swiftUI:
             ScrollView {
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(iconSize), spacing: spacing), count: columns), spacing: spacing) {
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(iconSize), spacing: spacingX), count: columns), spacing: spacingY) {
                     ForEach(viewModel.folders) { folder in
                         FolderView(
                             folder: folder,

@@ -17,7 +17,7 @@ class CAGridView: NSView, NSDraggingSource {
     var applications: [ApplicationInfo] = []
     var folders: [FolderInfo] = []
     
-    var gridSize: GridSize = .default
+    var gridSize: GridSize = GridSize(columns: 7, rows: 5)
     var currentPage: Int = 0
     var iconSize: CGFloat = 64
     var spacing: CGFloat = 16
@@ -51,6 +51,8 @@ class CAGridView: NSView, NSDraggingSource {
     private func setupView() {
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
+        layoutIcons() // 保证启动时执行布局和日志输出
+        print("setupView called")
     }
     
     // MARK: - Public Methods
@@ -81,7 +83,7 @@ class CAGridView: NSView, NSDraggingSource {
     
     /// 设置网格尺寸
     func setGridSize(_ size: GridSize) {
-        gridSize = size
+        gridSize = GridSize(columns: 7, rows: 5)
         needsLayout = true
     }
     
@@ -95,52 +97,126 @@ class CAGridView: NSView, NSDraggingSource {
     func layoutIcons() {
         layer?.sublayers?.forEach { $0.removeFromSuperlayer() }
         iconLayers.removeAll()
-        
-        let pageItems = gridSize.itemsPerPage
+
+        // 计算横纵向自适应间距
+        let minSpacing: CGFloat = 16
+        let maxSpacing: CGFloat = 64
+        let columns = 7
+        let rows = 5
+        let pageItems = columns * rows
         let startIndex = currentPage * pageItems
-        
-        // 计算网格区域
+
         let padding: CGFloat = 40
         let gridWidth = bounds.width - padding * 2
         let gridHeight = bounds.height - padding * 2
-        
-        let cellWidth = (gridWidth - CGFloat(gridSize.columns - 1) * spacing) / CGFloat(gridSize.columns)
-        let cellHeight = (gridHeight - CGFloat(gridSize.rows - 1) * spacing) / CGFloat(gridSize.rows)
-        
+
+        // 先用最小间距计算最大格子尺寸
+        let cellWidthMax = (gridWidth - CGFloat(columns - 1) * minSpacing) / CGFloat(columns)
+        let cellHeightMax = (gridHeight - CGFloat(rows - 1) * minSpacing) / CGFloat(rows)
+        // 取横纵向的最小格子尺寸，保证格子不被拉伸
+        let cellSize = min(cellWidthMax, cellHeightMax)
+        // 再反推实际间距
+        let spacingX = (gridWidth - CGFloat(columns) * cellSize) / CGFloat(max(1, columns - 1))
+        let spacingY = (gridHeight - CGFloat(rows) * cellSize) / CGFloat(max(1, rows - 1))
+        // 限制间距范围
+        let finalSpacingX = max(minSpacing, min(maxSpacing, spacingX))
+        let finalSpacingY = max(minSpacing, min(maxSpacing, spacingY))
+
+        // 重新计算实际网格区域大小
+        let actualGridWidth = CGFloat(columns) * cellSize + CGFloat(columns - 1) * finalSpacingX
+        let actualGridHeight = CGFloat(rows) * cellSize + CGFloat(rows - 1) * finalSpacingY
+        let offsetX = (gridWidth - actualGridWidth) / 2
+        let offsetY = (gridHeight - actualGridHeight) / 2
+
+        // 绘制网格边缘线条
+        let borderLayer = CALayer()
+        borderLayer.frame = CGRect(x: padding + offsetX, y: padding + offsetY, width: actualGridWidth, height: actualGridHeight)
+        borderLayer.borderWidth = 2
+        borderLayer.borderColor = NSColor.red.cgColor
+        borderLayer.zPosition = -10
+        layer?.addSublayer(borderLayer)
+
+        // 列间隔线
+        for col in 1..<columns {
+            let x = padding + offsetX + CGFloat(col) * (cellSize + finalSpacingX) - finalSpacingX / 2
+            let line = CALayer()
+            line.frame = CGRect(x: x, y: padding + offsetY, width: 2, height: actualGridHeight)
+            line.backgroundColor = NSColor.green.withAlphaComponent(0.7).cgColor
+            line.zPosition = -10
+            layer?.addSublayer(line)
+        }
+        // 行间隔线
+        for row in 1..<rows {
+            let y = padding + offsetY + CGFloat(row) * (cellSize + finalSpacingY) - finalSpacingY / 2
+            let line = CALayer()
+            line.frame = CGRect(x: padding + offsetX, y: y, width: actualGridWidth, height: 2)
+            line.backgroundColor = NSColor.blue.withAlphaComponent(0.7).cgColor
+            line.zPosition = -10
+            layer?.addSublayer(line)
+        }
+        // 每格背景和中心点
+        for row in 0..<rows {
+            for col in 0..<columns {
+                let x = padding + offsetX + CGFloat(col) * (cellSize + finalSpacingX)
+                let y = padding + offsetY + CGFloat(row) * (cellSize + finalSpacingY)
+                let cellLayer = CALayer()
+                cellLayer.frame = CGRect(x: x, y: y, width: cellSize, height: cellSize)
+                cellLayer.backgroundColor = NSColor.lightGray.withAlphaComponent(0.15).cgColor
+                cellLayer.zPosition = -10
+                layer?.addSublayer(cellLayer)
+                let dot = CALayer()
+                dot.frame = CGRect(x: x + cellSize/2 - 3, y: y + cellSize/2 - 3, width: 6, height: 6)
+                dot.cornerRadius = 3
+                dot.backgroundColor = NSColor.orange.cgColor
+                dot.zPosition = -10
+                layer?.addSublayer(dot)
+            }
+        }
+
         // 先布局文件夹
         for (index, folder) in folders.enumerated() {
             guard index < pageItems else { break }
-            let position = calculatePosition(for: index, columns: gridSize.columns, rows: gridSize.rows, 
-                                            cellWidth: cellWidth, cellHeight: cellHeight, padding: padding, spacing: spacing)
-            createFolderLayer(folder, at: position, cellSize: CGSize(width: cellWidth, height: cellHeight))
+            let position = CGPoint(
+                x: padding + offsetX + CGFloat(index % columns) * (cellSize + finalSpacingX) + cellSize / 2,
+                y: padding + offsetY + CGFloat(index / columns) * (cellSize + finalSpacingY) + cellSize / 2
+            )
+            createFolderLayer(folder, at: position, cellSize: CGSize(width: cellSize, height: cellSize))
         }
-        
+
         // 布局应用
         let folderCount = min(folders.count, pageItems)
         for (index, app) in applications.enumerated() {
             let adjustedIndex = index + startIndex
             guard adjustedIndex - folderCount < pageItems else { break }
-            let position = calculatePosition(for: adjustedIndex, columns: gridSize.columns, rows: gridSize.rows,
-                                            cellWidth: cellWidth, cellHeight: cellHeight, padding: padding, spacing: spacing)
-            createAppLayer(app, at: position, cellSize: CGSize(width: cellWidth, height: cellHeight))
+            let position = CGPoint(
+                x: padding + offsetX + CGFloat(adjustedIndex % columns) * (cellSize + finalSpacingX) + cellSize / 2,
+                y: padding + offsetY + CGFloat(adjustedIndex / columns) * (cellSize + finalSpacingY) + cellSize / 2
+            )
+            createAppLayer(app, at: position, cellSize: CGSize(width: cellSize, height: cellSize))
         }
+        
+        print("[CAGridView] gridWidth:", gridWidth, "gridHeight:", gridHeight)
+        print("[CAGridView] cellWidthMax:", cellWidthMax, "cellHeightMax:", cellHeightMax, "cellSize:", cellSize)
+        print("[CAGridView] spacingX:", spacingX, "spacingY:", spacingY)
+        print("[CAGridView] finalSpacingX:", finalSpacingX, "finalSpacingY:", finalSpacingY)
+        print("[CAGridView] actualGridWidth:", actualGridWidth, "actualGridHeight:", actualGridHeight)
     }
     
-    private func calculatePosition(for index: Int, columns: Int, rows: Int, 
-                                    cellWidth: CGFloat, cellHeight: CGFloat, 
-                                    padding: CGFloat, spacing: CGFloat) -> CGPoint {
+    private func calculatePosition(for index: Int, columns: Int, rows: Int,
+                                  cellWidth: CGFloat, cellHeight: CGFloat,
+                                  padding: CGFloat, spacing: CGFloat,
+                                  gridHeight: CGFloat, totalHeight: CGFloat) -> CGPoint {
         let row = index / columns
         let col = index % columns
-        
         let x = padding + CGFloat(col) * (cellWidth + spacing) + cellWidth / 2
-        let y = bounds.height - padding - CGFloat(row) * (cellHeight + spacing) - cellHeight / 2
-        
+        // 保证网格居中显示
+        let y = totalHeight - padding - CGFloat(row) * (cellHeight + spacing) - cellHeight / 2
         return CGPoint(x: x, y: y)
     }
     
     private func createAppLayer(_ app: ApplicationInfo, at position: CGPoint, cellSize: CGSize) {
         let containerLayer = CALayer()
-        containerLayer.frame = CGRect(x: position.x - cellSize.width / 2, 
+        containerLayer.frame = CGRect(x: position.x - cellSize.width / 2,
                                        y: position.y - cellSize.height / 2,
                                        width: cellSize.width, height: cellSize.height)
         
