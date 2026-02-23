@@ -75,13 +75,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     // 清理菜单栏，只保留最简菜单
     private func cleanMenuBar() {
-        let mainMenu = NSApplication.shared.mainMenu ?? NSMenu()
-        mainMenu.removeAllItems()
+        let mainMenu = NSMenu()
         let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "App"
-        let appMenu = NSMenuItem()
-        appMenu.submenu = NSMenu(title: appName)
-        mainMenu.addItem(appMenu)
+        let appMenuItem = NSMenuItem()
+        let appMenu = NSMenu(title: appName)
+        // 设置菜单项
+        let settingsItem = NSMenuItem(title: "设置...", action: #selector(showPreferences), keyEquivalent: ",")
+        settingsItem.target = self
+        appMenu.addItem(settingsItem)
+        appMenu.addItem(NSMenuItem.separator())
+        // 退出菜单项
+        let quitItem = NSMenuItem(title: "退出 \(appName)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quitItem.target = NSApp
+        appMenu.addItem(quitItem)
+        appMenuItem.submenu = appMenu
+        mainMenu.addItem(appMenuItem)
         NSApplication.shared.mainMenu = mainMenu
+    }
+    // 设置菜单项的回调
+    @objc private func showPreferences() {
+        // TODO: 实现设置窗口弹出逻辑
     }
     // 注册全局快捷键 F4，按下时显示主窗口
     private func setupGlobalShortcut() {
