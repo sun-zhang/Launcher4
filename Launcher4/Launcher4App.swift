@@ -50,6 +50,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         configureMainWindow()
+        cleanMenuBar()
     }
     
     private func configureMainWindow() {
@@ -65,5 +66,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 window.perform(#selector(NSWindow.toggleFullScreen(_:)), with: nil, afterDelay: 0)
             }
         }
+    }
+    // 清理菜单栏，只保留最简菜单
+    private func cleanMenuBar() {
+        let mainMenu = NSApplication.shared.mainMenu ?? NSMenu()
+        mainMenu.removeAllItems()
+        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "App"
+        let appMenu = NSMenuItem()
+        appMenu.submenu = NSMenu(title: appName)
+        mainMenu.addItem(appMenu)
+        NSApplication.shared.mainMenu = mainMenu
     }
 }
