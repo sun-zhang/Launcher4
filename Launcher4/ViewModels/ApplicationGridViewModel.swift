@@ -69,7 +69,25 @@ class ApplicationGridViewModel: ObservableObject {
     
     /// 加载应用程序列表
     func loadApplications() async {
-        applications = await applicationScanner.scanApplications()
+        let scannedApps = await applicationScanner.scanApplications()
+        // 读取用户自定义顺序
+        let settings = await settingsManager.getSettings()
+        if let customOrder = settings.appOrder, !customOrder.isEmpty {
+            // 按自定义顺序排列
+            var orderedApps: [ApplicationInfo] = []
+            var unorderedApps: [ApplicationInfo] = []
+            for appId in customOrder {
+                if let app = scannedApps.first(where: { $0.bundleIdentifier == appId }) {
+                    orderedApps.append(app)
+                }
+            }
+            // 未在自定义顺序中的应用，按原始顺序追加
+            unorderedApps = scannedApps.filter { !customOrder.contains($0.bundleIdentifier) }
+            applications = orderedApps + unorderedApps
+        } else {
+            // 保持原始扫描顺序
+            applications = scannedApps
+        }
     }
     
     /// 加载文件夹列表

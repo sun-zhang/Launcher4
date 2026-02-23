@@ -40,7 +40,9 @@ actor ApplicationScanner: ApplicationScannerProtocol {
         }
         
         applications = allApps
-        return Array(allApps.values)
+        // 默认按 bundleURL.path 排序，保证顺序稳定
+        let sortedApps = Array(allApps.values).sorted { $0.bundleURL.path < $1.bundleURL.path }
+        return sortedApps
     }
     
     /// 启动文件系统监控

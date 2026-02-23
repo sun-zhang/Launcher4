@@ -51,6 +51,9 @@ struct AppSettings: Codable, Equatable, Sendable {
     // 编辑模式
     var lockLayout: Bool = false
     
+    // 新增应用自定义顺序
+    var appOrder: [String]? = nil // bundleIdentifier 顺序
+    
     // 图标大小枚举
     enum IconSize: String, Codable, Sendable {
         case small
