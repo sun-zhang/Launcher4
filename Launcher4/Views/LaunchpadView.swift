@@ -138,6 +138,9 @@ struct LaunchpadView: View {
                         isRunning: false,
                         isEditing: false
                     )
+                    .onTapGesture {
+                        launchApplication(app)
+                    }
                 }
             }
             .padding()
